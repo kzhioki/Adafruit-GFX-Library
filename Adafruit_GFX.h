@@ -9,6 +9,11 @@
 #endif
 #include "gfxfont.h"
 
+// [TBD] Workaround to avoid compile error.
+#ifndef __FlashStringHelper
+#define __FlashStringHelper char
+#endif
+
 /// A generic graphics superclass that can handle all sorts of drawing. At a minimum you can subclass and provide drawPixel(). At a maximum you can do a ton of overriding to optimize. Used for any/all Adafruit displays!
 class Adafruit_GFX : public Print {
 
