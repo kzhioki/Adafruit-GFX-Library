@@ -50,6 +50,8 @@
 
 #if defined (__AVR__) ||  defined(TEENSYDUINO) ||  defined(ARDUINO_ARCH_STM32F1)
     #define HSPI_SET_CLOCK() SPI_OBJECT.setClockDivider(SPI_CLOCK_DIV2);
+#elif defined(ARDUINO_ARCH_SPRESENSE)
+    #define HSPI_SET_CLOCK() SPI_OBJECT.setClockDivider(SPI_CLOCK_DIV2);
 #elif defined (__arm__)
     #define HSPI_SET_CLOCK() SPI_OBJECT.setClockDivider(11);
 #elif defined(ESP8266) || defined(ESP32)
@@ -85,6 +87,19 @@
     #else
         #define HSPI_WRITE_PIXELS(c,l)   for(uint32_t i=0; i<((l)/2); i++){ SPI_WRITE16(((uint16_t*)(c))[i]); }
     #endif
+#elif defined(ARDUINO_ARCH_SPRESENSE)
+    #define SPI_HAS_WRITE_PIXELS
+    // Optimized SPI (Spresense)
+    #define HSPI_READ()              SPI_OBJECT.transfer(0)
+    #define HSPI_WRITE(b)            SPI_OBJECT.transfer(b)
+    #define HSPI_WRITE16(s)          SPI_OBJECT.transfer16(s)
+    #define HSPI_WRITE32(l)          HSPI_WRITE16((uint16_t)((l) >> 16)); HSPI_WRITE16((uint16_t)(l));
+    #ifdef SPI_HAS_WRITE_PIXELS
+        #define SPI_MAX_PIXELS_AT_ONCE  1024
+        #define HSPI_WRITE_PIXELS(c,l)   SPI_OBJECT.transfer16(c,((l)/2))
+    #else
+        #define HSPI_WRITE_PIXELS(c,l)   for(uint32_t i=0; i<((l)/2); i++){ HSPI_WRITE16(((uint16_t*)(c))[i]); }
+    #endif
 #else
     // Standard Byte-by-Byte SPI
 
@@ -114,5 +129,17 @@ static inline uint8_t _avr_spi_read(void) {
 #define SPI_WRITE16(s)          if(_sclk < 0){HSPI_WRITE16(s);}else{SSPI_WRITE16(s);}
 #define SPI_WRITE32(l)          if(_sclk < 0){HSPI_WRITE32(l);}else{SSPI_WRITE32(l);}
 #define SPI_WRITE_PIXELS(c,l)   if(_sclk < 0){HSPI_WRITE_PIXELS(c,l);}else{SSPI_WRITE_PIXELS(c,l);}
+
+// Spresense dedicated special settings (overwrite)
+#if defined(ARDUINO_ARCH_SPRESENSE)
+    #undef HSPI_BEGIN_TRANSACTION
+    #define HSPI_BEGIN_TRANSACTION() HSPI_SET_CLOCK(); SPI_OBJECT.setBitOrder(MSBFIRST); SPI_OBJECT.setDataMode(SPI_MODE3)
+
+    #undef SPI_BEGIN
+    #define SPI_BEGIN()             if(_sclk < 0){SPI_OBJECT.begin(); HSPI_BEGIN_TRANSACTION();}
+
+    #undef SPI_BEGIN_TRANSACTION
+    #define SPI_BEGIN_TRANSACTION()
+#endif
 
 #endif // _ADAFRUIT_SPITFT_MACROS
