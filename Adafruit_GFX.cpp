@@ -1892,6 +1892,22 @@ GFXcanvas16::GFXcanvas16(uint16_t w, uint16_t h) : Adafruit_GFX(w, h) {
 
 /**************************************************************************/
 /*!
+   @brief    Instatiate a GFX 16-bit canvas context for graphics
+   @param    w   Display width, in pixels
+   @param    h   Display height, in pixels
+   @param    addr buffer address
+*/
+/**************************************************************************/
+GFXcanvas16::GFXcanvas16(uint16_t w, uint16_t h, uint16_t *addr) : Adafruit_GFX(w, h) {
+    uint32_t bytes = w * h * 2;
+    buffer = addr;
+    if (buffer) {
+        memset(buffer, 0, bytes);
+    }
+}
+
+/**************************************************************************/
+/*!
    @brief    Delete the canvas, free memory
 */
 /**************************************************************************/
@@ -1907,6 +1923,10 @@ GFXcanvas16::~GFXcanvas16(void) {
 /**************************************************************************/
 uint16_t* GFXcanvas16::getBuffer(void) {
     return buffer;
+}
+
+void GFXcanvas16::setBuffer(uint16_t *addr) {
+    buffer = addr;
 }
 
 /**************************************************************************/
@@ -1959,5 +1979,44 @@ void GFXcanvas16::fillScreen(uint16_t color) {
             for(i=0; i<pixels; i++) buffer[i] = color;
         }
     }
+}
+
+// 16-bit 5-5-1-5 special format
+void GFXcanvas16::setBackGround(uint16_t *img)
+{
+    int i, x, y;
+    for (i = 0, y = 0; y < _height; y++) {
+        for (x = 0; x < _width; x++) {
+            img[i] &= ~(1 << 5);
+            buffer[x + y * _width] = img[i];
+            i++;
+        }
+    }
+}
+
+int GFXcanvas16::drawImage(int16_t x, int16_t y,
+                           int16_t w, int16_t h,
+                           uint16_t *img)
+{
+    int hit = 0;
+    if (((x + w) < 0) || (x >= _width) ||
+        ((y + h) < 0) || (y >= _height)) return hit;
+
+    int i, xx, yy;
+    for (i = 0, yy = y; yy < y + h; yy++) {
+        for (xx = x; xx < x + w; xx++) {
+            if (img[i] & (1 << 5)) { // check a alpha bit
+                if ((xx >= 0) && (xx < _width) &&
+                    (yy >= 0) && (yy < _height)) {
+                    if (buffer[xx + yy * _width] & (1 << 5)) {
+                        hit = 1;
+                    }
+                    buffer[xx + yy * _width] = img[i];
+                }
+            }
+            i++;
+        }
+    }
+    return hit;
 }
 

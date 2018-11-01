@@ -216,10 +216,16 @@ class GFXcanvas8 : public Adafruit_GFX {
 class GFXcanvas16 : public Adafruit_GFX {
  public:
   GFXcanvas16(uint16_t w, uint16_t h);
+  GFXcanvas16(uint16_t w, uint16_t h, uint16_t *addr);
   ~GFXcanvas16(void);
   void      drawPixel(int16_t x, int16_t y, uint16_t color),
             fillScreen(uint16_t color);
+  void setBackGround(uint16_t *img);
+  int  drawImage(int16_t x, int16_t y,
+                 int16_t w, int16_t h,
+                 uint16_t *img);
   uint16_t *getBuffer(void);
+  void      setBuffer(uint16_t *addr);
  private:
   uint16_t *buffer;
 };
