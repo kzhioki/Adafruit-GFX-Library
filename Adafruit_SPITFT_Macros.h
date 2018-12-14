@@ -96,7 +96,7 @@
     #define HSPI_WRITE32(l)          HSPI_WRITE16((uint16_t)((l) >> 16)); HSPI_WRITE16((uint16_t)(l));
     #ifdef SPI_HAS_WRITE_PIXELS
         #define SPI_MAX_PIXELS_AT_ONCE  1024
-        #define HSPI_WRITE_PIXELS(c,l)   SPI_OBJECT.transfer16(c,((l)/2))
+        #define HSPI_WRITE_PIXELS(c,l)   SPI_OBJECT.send16(c,((l)/2))
     #else
         #define HSPI_WRITE_PIXELS(c,l)   for(uint32_t i=0; i<((l)/2); i++){ HSPI_WRITE16(((uint16_t*)(c))[i]); }
     #endif
