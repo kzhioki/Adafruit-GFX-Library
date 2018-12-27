@@ -100,6 +100,8 @@
     #else
         #define HSPI_WRITE_PIXELS(c,l)   for(uint32_t i=0; i<((l)/2); i++){ HSPI_WRITE16(((uint16_t*)(c))[i]); }
     #endif
+    #undef HSPI_BEGIN_TRANSACTION
+    #define HSPI_BEGIN_TRANSACTION() SPI_OBJECT.beginTransaction(SPISettings(_freq, MSBFIRST, SPI_MODE3))
 #else
     // Standard Byte-by-Byte SPI
 
@@ -129,17 +131,5 @@ static inline uint8_t _avr_spi_read(void) {
 #define SPI_WRITE16(s)          if(_sclk < 0){HSPI_WRITE16(s);}else{SSPI_WRITE16(s);}
 #define SPI_WRITE32(l)          if(_sclk < 0){HSPI_WRITE32(l);}else{SSPI_WRITE32(l);}
 #define SPI_WRITE_PIXELS(c,l)   if(_sclk < 0){HSPI_WRITE_PIXELS(c,l);}else{SSPI_WRITE_PIXELS(c,l);}
-
-// Spresense dedicated special settings (overwrite)
-#if defined(ARDUINO_ARCH_SPRESENSE)
-    #undef HSPI_BEGIN_TRANSACTION
-    #define HSPI_BEGIN_TRANSACTION() HSPI_SET_CLOCK(); SPI_OBJECT.setBitOrder(MSBFIRST); SPI_OBJECT.setDataMode(SPI_MODE3)
-
-    #undef SPI_BEGIN
-    #define SPI_BEGIN()             if(_sclk < 0){SPI_OBJECT.begin(); HSPI_BEGIN_TRANSACTION();}
-
-    #undef SPI_BEGIN_TRANSACTION
-    #define SPI_BEGIN_TRANSACTION()
-#endif
 
 #endif // _ADAFRUIT_SPITFT_MACROS
